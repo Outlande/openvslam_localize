@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+/map_msg
+/build
+keyframe_trajectory.txt
+frame_trajectory.txt
+orb_vocab.fbow
+track_times.txt
+/results

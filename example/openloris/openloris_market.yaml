@@ -1,0 +1,61 @@
+# Openloris RGBD monocular model for 01
+#==============#
+# Camera Model #
+#==============#
+Camera:
+  name: "Realsense 435i"
+  setup: "RGBD"
+  model: "perspective"
+
+  fx: 611.45
+  fy: 611.48
+  cx: 433.20
+  cy: 249.47
+
+  k1: 0
+  k2: 0
+  p1: 0
+  p2: 0
+  k3: 0
+
+  fps: 30.0
+  cols: 848
+  rows: 480
+
+  focal_x_baseline: 40.0
+  color_order: "RGB"
+
+#================#
+# ORB Parameters #
+#================#
+
+Feature:
+  max_num_keypoints: 1000
+  ini_max_num_keypoints: 2000
+  scale_factor: 1.2
+  num_levels: 8
+  ini_fast_threshold: 20
+  min_fast_threshold: 7
+
+#=====================#
+# Tracking Parameters #
+#=====================#
+
+depth_threshold: 20.0
+depthmap_factor: 1000.0
+
+#===========================#
+# PangolinViewer Parameters #
+#===========================#
+
+PangolinViewer:
+  keyframe_size: 0.05
+  keyframe_line_width: 1
+  graph_line_width: 1
+  point_size: 2
+  camera_size: 0.08
+  camera_line_width: 3
+  viewpoint_x: 0
+  viewpoint_y: -0.9
+  viewpoint_z: -1.9
+  viewpoint_f: 400
