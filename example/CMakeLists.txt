@@ -41,6 +41,9 @@ list(APPEND EXECUTABLE_TARGETS run_camera_slam)
 add_executable(run_camera_localization run_camera_localization.cc)
 list(APPEND EXECUTABLE_TARGETS run_camera_localization)
 
+add_executable(run_openloris_localization run_openloris_localization.cc util/image_util.cc util/tum_rgbd_util.cc)
+list(APPEND EXECUTABLE_TARGETS run_openloris_localization)
+
 add_executable(run_image_slam run_image_slam.cc util/image_util.cc)
 list(APPEND EXECUTABLE_TARGETS run_image_slam)
 

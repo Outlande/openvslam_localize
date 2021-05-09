@@ -80,6 +80,8 @@ public:
     //! (Note: RGB and Depth images must be aligned)
     Mat44_t track_RGBD_image(const cv::Mat& img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
 
+    Mat44_t localize_RGBD_image(const cv::Mat& img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
+
     //-----------------------------------------
     // management for reset process
 
@@ -135,6 +137,9 @@ protected:
 
     //! Main stream of the tracking module
     void track();
+    void localize();
+    bool track_only_landmark();
+    void search_curr_pose_landmark();
 
     //! Try to initialize with the current frame
     bool initialize();

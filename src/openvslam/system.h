@@ -113,6 +113,8 @@ public:
     //! (Note: RGB and Depth images must be aligned)
     Mat44_t feed_RGBD_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
 
+    Mat44_t feed_RGBD_frame_localize(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
+
     //-----------------------------------------
     // management for pause
 

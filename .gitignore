@@ -38,3 +38,4 @@ frame_trajectory.txt
 orb_vocab.fbow
 track_times.txt
 /results
+.vscode
