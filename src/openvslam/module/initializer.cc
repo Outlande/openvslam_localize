@@ -146,7 +146,7 @@ bool initializer::try_initialize_for_monocular(data::frame& curr_frm) {
 
     if (num_matches < min_num_triangulated_) {
         // rebuild the initializer with the next frame
-        reset();
+        if (curr_frm.id_-init_frm_.id_ > 1) reset();
         return false;
     }
 

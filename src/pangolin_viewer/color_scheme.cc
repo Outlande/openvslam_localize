@@ -1,21 +1,18 @@
 #include "pangolin_viewer/color_scheme.h"
 
-#include <stdexcept>
 #include <cctype>
+#include <stdexcept>
 
 namespace pangolin_viewer {
 
 color_scheme::color_scheme(const std::string& color_set_str) {
     if (stricmp(color_set_str, std::string("white"))) {
         set_color_as_white();
-    }
-    else if (stricmp(color_set_str, std::string("black"))) {
+    } else if (stricmp(color_set_str, std::string("black"))) {
         set_color_as_black();
-    }
-    else if (stricmp(color_set_str, std::string("purple"))) {
+    } else if (stricmp(color_set_str, std::string("purple"))) {
         set_color_as_purple();
-    }
-    else {
+    } else {
         throw std::runtime_error("undefined color scheme: " + color_set_str);
     }
 }
@@ -55,9 +52,8 @@ bool color_scheme::stricmp(const std::string& str1, const std::string& str2) {
         return false;
     }
 
-    return std::equal(str1.cbegin(), str1.cend(), str2.cbegin(), [](const char& lhs, const char& rhs) {
-        return std::tolower(lhs) == std::tolower(rhs);
-    });
+    return std::equal(str1.cbegin(), str1.cend(), str2.cbegin(),
+                      [](const char& lhs, const char& rhs) { return std::tolower(lhs) == std::tolower(rhs); });
 }
 
 } // namespace pangolin_viewer

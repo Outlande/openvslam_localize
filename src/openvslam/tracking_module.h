@@ -82,6 +82,8 @@ public:
 
     Mat44_t localize_RGBD_image(const cv::Mat& img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
 
+    Mat44_t localize_mono_image(const cv::Mat& img, const double timestamp, const cv::Mat& mask = cv::Mat{});
+
     //-----------------------------------------
     // management for reset process
 
@@ -258,6 +260,9 @@ protected:
 
     //! Pause of the tracking module is requested or not
     bool pause_is_requested_ = false;
+
+    int success_num = 0;
+    int lost_num = 0;
 };
 
 } // namespace openvslam

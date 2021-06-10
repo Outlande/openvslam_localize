@@ -1,13 +1,13 @@
 #ifndef OPENVSLAM_SYSTEM_H
 #define OPENVSLAM_SYSTEM_H
 
-#include "openvslam/type.h"
 #include "openvslam/data/bow_vocabulary_fwd.h"
+#include "openvslam/type.h"
 
+#include <atomic>
+#include <mutex>
 #include <string>
 #include <thread>
-#include <mutex>
-#include <atomic>
 
 #include <opencv2/core/core.hpp>
 
@@ -20,23 +20,23 @@ class global_optimization_module;
 
 namespace camera {
 class base;
-} // namespace camera
+}  // namespace camera
 
 namespace data {
 class camera_database;
 class map_database;
 class bow_database;
-} // namespace data
+}  // namespace data
 
 namespace publish {
 class map_publisher;
 class frame_publisher;
-} // namespace publish
+}  // namespace publish
 
 class system {
 public:
     //! Constructor
-    system(const std::shared_ptr<config>& cfg, const std::string& vocab_file_path);
+    system(const std::shared_ptr<config> &cfg, const std::string &vocab_file_path);
 
     //! Destructor
     ~system();
@@ -54,16 +54,16 @@ public:
     // data I/O
 
     //! Save the frame trajectory in the specified format
-    void save_frame_trajectory(const std::string& path, const std::string& format) const;
+    void save_frame_trajectory(const std::string &path, const std::string &format) const;
 
     //! Save the keyframe trajectory in the specified format
-    void save_keyframe_trajectory(const std::string& path, const std::string& format) const;
+    void save_keyframe_trajectory(const std::string &path, const std::string &format) const;
 
     //! Load the map database from the MessagePack file
-    void load_map_database(const std::string& path) const;
+    void load_map_database(const std::string &path) const;
 
     //! Save the map database to the MessagePack file
-    void save_map_database(const std::string& path) const;
+    void save_map_database(const std::string &path) const;
 
     //! Get the map publisher
     const std::shared_ptr<publish::map_publisher> get_map_publisher() const;
@@ -103,17 +103,22 @@ public:
 
     //! Feed a monocular frame to SLAM system
     //! (NOTE: distorted images are acceptable if calibrated)
-    Mat44_t feed_monocular_frame(const cv::Mat& img, const double timestamp, const cv::Mat& mask = cv::Mat{});
+    Mat44_t feed_monocular_frame(const cv::Mat &img, const double timestamp, const cv::Mat &mask = cv::Mat{});
 
     //! Feed a stereo frame to SLAM system
     //! (Note: Left and Right images must be stereo-rectified)
-    Mat44_t feed_stereo_frame(const cv::Mat& left_img, const cv::Mat& right_img, const double timestamp, const cv::Mat& mask = cv::Mat{});
+    Mat44_t feed_stereo_frame(const cv::Mat &left_img, const cv::Mat &right_img, const double timestamp,
+                              const cv::Mat &mask = cv::Mat{});
 
     //! Feed an RGBD frame to SLAM system
     //! (Note: RGB and Depth images must be aligned)
-    Mat44_t feed_RGBD_frame(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
+    Mat44_t feed_RGBD_frame(const cv::Mat &rgb_img, const cv::Mat &depthmap, const double timestamp,
+                            const cv::Mat &mask = cv::Mat{});
 
-    Mat44_t feed_RGBD_frame_localize(const cv::Mat& rgb_img, const cv::Mat& depthmap, const double timestamp, const cv::Mat& mask = cv::Mat{});
+    Mat44_t feed_RGBD_frame_localize(const cv::Mat &rgb_img, const cv::Mat &depthmap, const double timestamp,
+                                     const cv::Mat &mask = cv::Mat{});
+
+    Mat44_t feed_monocular_frame_localize(const cv::Mat &img, const double timestamp, const cv::Mat &mask = cv::Mat{});
 
     //-----------------------------------------
     // management for pause
@@ -158,30 +163,30 @@ private:
     //! config
     const std::shared_ptr<config> cfg_;
     //! camera model
-    camera::base* camera_ = nullptr;
+    camera::base *camera_ = nullptr;
 
     //! camera database
-    data::camera_database* cam_db_ = nullptr;
+    data::camera_database *cam_db_ = nullptr;
 
     //! map database
-    data::map_database* map_db_ = nullptr;
+    data::map_database *map_db_ = nullptr;
 
     //! BoW vocabulary
-    data::bow_vocabulary* bow_vocab_ = nullptr;
+    data::bow_vocabulary *bow_vocab_ = nullptr;
 
     //! BoW database
-    data::bow_database* bow_db_ = nullptr;
+    data::bow_database *bow_db_ = nullptr;
 
     //! tracker
-    tracking_module* tracker_ = nullptr;
+    tracking_module *tracker_ = nullptr;
 
     //! mapping module
-    mapping_module* mapper_ = nullptr;
+    mapping_module *mapper_ = nullptr;
     //! mapping thread
     std::unique_ptr<std::thread> mapping_thread_ = nullptr;
 
     //! global optimization module
-    global_optimization_module* global_optimizer_ = nullptr;
+    global_optimization_module *global_optimizer_ = nullptr;
     //! global optimization thread
     std::unique_ptr<std::thread> global_optimization_thread_ = nullptr;
 
@@ -210,6 +215,6 @@ private:
     mutable std::mutex mtx_loop_detector_;
 };
 
-} // namespace openvslam
+}  // namespace openvslam
 
-#endif // OPENVSLAM_SYSTEM_H
+#endif  // OPENVSLAM_SYSTEM_H

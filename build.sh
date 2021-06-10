@@ -26,5 +26,18 @@ cmake \
 
 export SPDLOG_LEVEL=debug
 
+./build/run_tum_rgbd_slam \
+    -v ./orb_vocab.fbow \
+    -d ../datasets/geek/map_bag/ \
+    -c ./example/geek/geek_mono.yaml -p results/map_msg/geek_map.msg --eval-log
+
+
+./build/run_openloris_localization \
+-v ./orb_vocab.fbow \
+-d ../datasets/geek/map_bag/ \
+-c ./example/geek/geek_mono.yaml \
+--frame-skip 1 -p results/map_msg/geek_map.msg \
+--mapping
+
 
 # 是否开mapping模块

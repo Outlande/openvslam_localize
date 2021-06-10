@@ -320,6 +320,22 @@ Mat44_t tracking_module::localize_RGBD_image(const cv::Mat& img, const cv::Mat& 
     return curr_frm_.cam_pose_cw_;
 }
 
+Mat44_t tracking_module::localize_mono_image(const cv::Mat& img, const double timestamp, const cv::Mat& mask) {
+    const auto start = std::chrono::system_clock::now();
+
+    // color and depth scale conversion
+    img_gray_ = img;
+    util::convert_to_grayscale(img_gray_, camera_->color_order_);
+
+    // create current frame object
+    curr_frm_ = data::frame(img_gray_, timestamp, extractor_left_, bow_vocab_, camera_, true_depth_thr_, mask);
+    localize();
+
+    const auto end = std::chrono::system_clock::now();
+    elapsed_ms_ = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    return curr_frm_.cam_pose_cw_;
+}
 
 void tracking_module::localize() {
     last_tracking_state_ = tracking_state_;
@@ -384,6 +400,13 @@ void tracking_module::localize() {
             // when lost, velocity dont valid
             curr_frm_.cam_pose_cw_is_valid_ = false;
         }
+        if (tracking_state_ == tracker_state_t::Lost){
+            lost_num++;
+        } else{
+            success_num++;
+        }
+        spdlog::info("tracking success number{} fail number{}", success_num, lost_num);
+
 
         // // check to insert the new keyframe derived from the current frame
         // if (succeeded && new_keyframe_is_needed()) {
@@ -438,6 +461,7 @@ bool tracking_module::track_only_landmark(){
     }
 
     constexpr unsigned int num_tracked_lms_thr = 20;
+    spdlog::debug("local map tracking {} matches", num_tracked_lms_);
 
     // if recently relocalized, use the more strict threshold
     if (curr_frm_.id_ < last_reloc_frm_id_ + camera_->fps_ && num_tracked_lms_ < 2 * num_tracked_lms_thr) {
@@ -455,7 +479,7 @@ bool tracking_module::track_only_landmark(){
 }
 
 void tracking_module::search_curr_pose_landmark(){
-    double distance_thr = 30;
+    double distance_thr = 20;
     // select the landmarks which can be reprojected from the ones observed in the current frame
 
     // get landmark which are around the camera pose

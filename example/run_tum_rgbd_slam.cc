@@ -6,20 +6,20 @@
 #include "socket_publisher/publisher.h"
 #endif
 
-#include "openvslam/system.h"
 #include "openvslam/config.h"
+#include "openvslam/system.h"
 #include "openvslam/util/yaml.h"
 
-#include <iostream>
 #include <algorithm>
-#include <fstream>
 #include <chrono>
+#include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <numeric>
 
+#include <spdlog/spdlog.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <spdlog/spdlog.h>
 #include <popl.hpp>
 
 #ifdef USE_STACK_TRACE_LOGGER
@@ -30,10 +30,9 @@
 #include <gperftools/profiler.h>
 #endif
 
-void mono_tracking(const std::shared_ptr<openvslam::config>& cfg,
-                   const std::string& vocab_file_path, const std::string& sequence_dir_path,
-                   const unsigned int frame_skip, const bool no_sleep, const bool auto_term,
-                   const bool eval_log, const std::string& map_db_path) {
+void mono_tracking(const std::shared_ptr<openvslam::config>& cfg, const std::string& vocab_file_path,
+                   const std::string& sequence_dir_path, const unsigned int frame_skip, const bool no_sleep,
+                   const bool auto_term, const bool eval_log, const std::string& map_db_path) {
     tum_rgbd_sequence sequence(sequence_dir_path);
     const auto frames = sequence.get_frames();
 
@@ -42,14 +41,14 @@ void mono_tracking(const std::shared_ptr<openvslam::config>& cfg,
     // startup the SLAM process
     SLAM.startup();
 
-    // create a viewer object
-    // and pass the frame_publisher and the map_publisher
+// create a viewer object
+// and pass the frame_publisher and the map_publisher
 #ifdef USE_PANGOLIN_VIEWER
-    pangolin_viewer::viewer viewer(
-        openvslam::util::yaml_optional_ref(cfg->yaml_node_, "PangolinViewer"), &SLAM, SLAM.get_frame_publisher(), SLAM.get_map_publisher());
+    pangolin_viewer::viewer viewer(openvslam::util::yaml_optional_ref(cfg->yaml_node_, "PangolinViewer"), &SLAM,
+                                   SLAM.get_frame_publisher(), SLAM.get_map_publisher());
 #elif USE_SOCKET_PUBLISHER
-    socket_publisher::publisher publisher(
-        openvslam::util::yaml_optional_ref(cfg->yaml_node_, "SocketPublisher"), &SLAM, SLAM.get_frame_publisher(), SLAM.get_map_publisher());
+    socket_publisher::publisher publisher(openvslam::util::yaml_optional_ref(cfg->yaml_node_, "SocketPublisher"), &SLAM,
+                                          SLAM.get_frame_publisher(), SLAM.get_map_publisher());
 #endif
 
     std::vector<double> track_times;
@@ -94,7 +93,7 @@ void mono_tracking(const std::shared_ptr<openvslam::config>& cfg,
             std::this_thread::sleep_for(std::chrono::microseconds(5000));
         }
 
-        // automatically close the viewer
+// automatically close the viewer
 #ifdef USE_PANGOLIN_VIEWER
         if (auto_term) {
             viewer.request_terminate();
@@ -106,7 +105,7 @@ void mono_tracking(const std::shared_ptr<openvslam::config>& cfg,
 #endif
     });
 
-    // run the viewer in the current thread
+// run the viewer in the current thread
 #ifdef USE_PANGOLIN_VIEWER
     viewer.run();
 #elif USE_SOCKET_PUBLISHER
@@ -143,10 +142,9 @@ void mono_tracking(const std::shared_ptr<openvslam::config>& cfg,
     std::cout << "mean tracking time: " << total_track_time / track_times.size() << "[s]" << std::endl;
 }
 
-void rgbd_tracking(const std::shared_ptr<openvslam::config>& cfg,
-                   const std::string& vocab_file_path, const std::string& sequence_dir_path,
-                   const unsigned int frame_skip, const bool no_sleep, const bool auto_term,
-                   const bool eval_log, const std::string& map_db_path) {
+void rgbd_tracking(const std::shared_ptr<openvslam::config>& cfg, const std::string& vocab_file_path,
+                   const std::string& sequence_dir_path, const unsigned int frame_skip, const bool no_sleep,
+                   const bool auto_term, const bool eval_log, const std::string& map_db_path) {
     tum_rgbd_sequence sequence(sequence_dir_path);
     const auto frames = sequence.get_frames();
 
@@ -155,14 +153,14 @@ void rgbd_tracking(const std::shared_ptr<openvslam::config>& cfg,
     // startup the SLAM process
     SLAM.startup();
 
-    // create a viewer object
-    // and pass the frame_publisher and the map_publisher
+// create a viewer object
+// and pass the frame_publisher and the map_publisher
 #ifdef USE_PANGOLIN_VIEWER
-    pangolin_viewer::viewer viewer(
-        openvslam::util::yaml_optional_ref(cfg->yaml_node_, "PangolinViewer"), &SLAM, SLAM.get_frame_publisher(), SLAM.get_map_publisher());
+    pangolin_viewer::viewer viewer(openvslam::util::yaml_optional_ref(cfg->yaml_node_, "PangolinViewer"), &SLAM,
+                                   SLAM.get_frame_publisher(), SLAM.get_map_publisher());
 #elif USE_SOCKET_PUBLISHER
-    socket_publisher::publisher publisher(
-        openvslam::util::yaml_optional_ref(cfg->yaml_node_, "SocketPublisher"), &SLAM, SLAM.get_frame_publisher(), SLAM.get_map_publisher());
+    socket_publisher::publisher publisher(openvslam::util::yaml_optional_ref(cfg->yaml_node_, "SocketPublisher"), &SLAM,
+                                          SLAM.get_frame_publisher(), SLAM.get_map_publisher());
 #endif
 
     std::vector<double> track_times;
@@ -208,7 +206,7 @@ void rgbd_tracking(const std::shared_ptr<openvslam::config>& cfg,
             std::this_thread::sleep_for(std::chrono::microseconds(5000));
         }
 
-        // automatically close the viewer
+// automatically close the viewer
 #ifdef USE_PANGOLIN_VIEWER
         if (auto_term) {
             viewer.request_terminate();
@@ -220,7 +218,7 @@ void rgbd_tracking(const std::shared_ptr<openvslam::config>& cfg,
 #endif
     });
 
-    // run the viewer in the current thread
+// run the viewer in the current thread
 #ifdef USE_PANGOLIN_VIEWER
     viewer.run();
 #elif USE_SOCKET_PUBLISHER
@@ -274,11 +272,11 @@ int main(int argc, char* argv[]) {
     auto auto_term = op.add<popl::Switch>("", "auto-term", "automatically terminate the viewer");
     auto debug_mode = op.add<popl::Switch>("", "debug", "debug mode");
     auto eval_log = op.add<popl::Switch>("", "eval-log", "store trajectory and tracking times for evaluation");
-    auto map_db_path = op.add<popl::Value<std::string>>("p", "map-db", "store a map database at this path after SLAM", "");
+    auto map_db_path =
+        op.add<popl::Value<std::string>>("p", "map-db", "store a map database at this path after SLAM", "");
     try {
         op.parse(argc, argv);
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         std::cerr << std::endl;
         std::cerr << op << std::endl;
@@ -301,8 +299,7 @@ int main(int argc, char* argv[]) {
     spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%L] %v%$");
     if (debug_mode->is_set()) {
         spdlog::set_level(spdlog::level::debug);
-    }
-    else {
+    } else {
         spdlog::set_level(spdlog::level::info);
     }
 
@@ -310,8 +307,7 @@ int main(int argc, char* argv[]) {
     std::shared_ptr<openvslam::config> cfg;
     try {
         cfg = std::make_shared<openvslam::config>(config_file_path->value());
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
@@ -322,16 +318,12 @@ int main(int argc, char* argv[]) {
 
     // run tracking
     if (cfg->camera_->setup_type_ == openvslam::camera::setup_type_t::Monocular) {
-        mono_tracking(cfg, vocab_file_path->value(), data_dir_path->value(),
-                      frame_skip->value(), no_sleep->is_set(), auto_term->is_set(),
-                      eval_log->is_set(), map_db_path->value());
-    }
-    else if (cfg->camera_->setup_type_ == openvslam::camera::setup_type_t::RGBD) {
-        rgbd_tracking(cfg, vocab_file_path->value(), data_dir_path->value(),
-                      frame_skip->value(), no_sleep->is_set(), auto_term->is_set(),
-                      eval_log->is_set(), map_db_path->value());
-    }
-    else {
+        mono_tracking(cfg, vocab_file_path->value(), data_dir_path->value(), frame_skip->value(), no_sleep->is_set(),
+                      auto_term->is_set(), eval_log->is_set(), map_db_path->value());
+    } else if (cfg->camera_->setup_type_ == openvslam::camera::setup_type_t::RGBD) {
+        rgbd_tracking(cfg, vocab_file_path->value(), data_dir_path->value(), frame_skip->value(), no_sleep->is_set(),
+                      auto_term->is_set(), eval_log->is_set(), map_db_path->value());
+    } else {
         throw std::runtime_error("Invalid setup type: " + cfg->camera_->get_setup_type_string());
     }
 
