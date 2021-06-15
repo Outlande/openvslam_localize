@@ -208,16 +208,16 @@ void global_optimization_module::correct_loop() {
     final_candidate_keyfrm->graph_node_->add_loop_edge(cur_keyfrm_);
     cur_keyfrm_->graph_node_->add_loop_edge(final_candidate_keyfrm);
 
-    // 5. launch loop BA
+    // // 5. launch loop BA
 
-    while (loop_bundle_adjuster_->is_running()) {
-        std::this_thread::sleep_for(std::chrono::microseconds(1000));
-    }
-    if (thread_for_loop_BA_) {
-        thread_for_loop_BA_->join();
-        thread_for_loop_BA_.reset(nullptr);
-    }
-    thread_for_loop_BA_ = std::unique_ptr<std::thread>(new std::thread(&module::loop_bundle_adjuster::optimize, loop_bundle_adjuster_.get(), cur_keyfrm_->id_));
+    // while (loop_bundle_adjuster_->is_running()) {
+    //     std::this_thread::sleep_for(std::chrono::microseconds(1000));
+    // }
+    // if (thread_for_loop_BA_) {
+    //     thread_for_loop_BA_->join();
+    //     thread_for_loop_BA_.reset(nullptr);
+    // }
+    // thread_for_loop_BA_ = std::unique_ptr<std::thread>(new std::thread(&module::loop_bundle_adjuster::optimize, loop_bundle_adjuster_.get(), cur_keyfrm_->id_));
 
     // 6. post-processing
 

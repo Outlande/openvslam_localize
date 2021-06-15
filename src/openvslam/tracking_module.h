@@ -133,6 +133,10 @@ public:
     //! elapsed microseconds for each tracking
     double elapsed_ms_ = 0.0;
 
+    void visualize_keypoints();
+
+    cv::Mat combine_images(cv::Mat img1, cv::Mat img2);
+
 protected:
     //-----------------------------------------
     // tracking processes
@@ -263,6 +267,8 @@ protected:
 
     int success_num = 0;
     int lost_num = 0;
+
+    std::vector<data::landmark*> pose_landmarks_;
 };
 
 } // namespace openvslam

@@ -36,8 +36,7 @@ export SPDLOG_LEVEL=debug
 -v ./orb_vocab.fbow \
 -d ../datasets/geek/map_bag/ \
 -c ./example/geek/geek_mono.yaml \
---frame-skip 1 -p results/map_msg/geek_map.msg \
---mapping
+--frame-skip 1 -p results/map_msg/geek_map.msg --debug
 
 
 # 是否开mapping模块

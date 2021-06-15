@@ -1,20 +1,20 @@
+#include "openvslam/optimize/pose_optimizer.h"
 #include "openvslam/data/frame.h"
 #include "openvslam/data/landmark.h"
-#include "openvslam/optimize/pose_optimizer.h"
 #include "openvslam/optimize/internal/se3/pose_opt_edge_wrapper.h"
 #include "openvslam/util/converter.h"
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
-#include <Eigen/StdVector>
-#include <g2o/core/solver.h>
 #include <g2o/core/block_solver.h>
-#include <g2o/core/sparse_optimizer.h>
-#include <g2o/core/robust_kernel_impl.h>
-#include <g2o/solvers/eigen/linear_solver_eigen.h>
-#include <g2o/solvers/dense/linear_solver_dense.h>
 #include <g2o/core/optimization_algorithm_levenberg.h>
+#include <g2o/core/robust_kernel_impl.h>
+#include <g2o/core/solver.h>
+#include <g2o/core/sparse_optimizer.h>
+#include <g2o/solvers/dense/linear_solver_dense.h>
+#include <g2o/solvers/eigen/linear_solver_eigen.h>
+#include <Eigen/StdVector>
 
 namespace openvslam {
 namespace optimize {
@@ -75,12 +75,10 @@ unsigned int pose_optimizer::optimize(data::frame& frm) const {
         const auto& undist_keypt = frm.undist_keypts_.at(idx);
         const float x_right = frm.stereo_x_right_.at(idx);
         const float inv_sigma_sq = frm.inv_level_sigma_sq_.at(undist_keypt.octave);
-        const auto sqrt_chi_sq = (frm.camera_->setup_type_ == camera::setup_type_t::Monocular)
-                                     ? sqrt_chi_sq_2D
-                                     : sqrt_chi_sq_3D;
-        auto pose_opt_edge_wrap = pose_opt_edge_wrapper(&frm, frm_vtx, lm->get_pos_in_world(),
-                                                        idx, undist_keypt.pt.x, undist_keypt.pt.y, x_right,
-                                                        inv_sigma_sq, sqrt_chi_sq);
+        const auto sqrt_chi_sq =
+            (frm.camera_->setup_type_ == camera::setup_type_t::Monocular) ? sqrt_chi_sq_2D : sqrt_chi_sq_3D;
+        auto pose_opt_edge_wrap = pose_opt_edge_wrapper(&frm, frm_vtx, lm->get_pos_in_world(), idx, undist_keypt.pt.x,
+                                                        undist_keypt.pt.y, x_right, inv_sigma_sq, sqrt_chi_sq);
         pose_opt_edge_wraps.push_back(pose_opt_edge_wrap);
         optimizer.addEdge(pose_opt_edge_wrap.edge_);
     }
@@ -110,19 +108,16 @@ unsigned int pose_optimizer::optimize(data::frame& frm) const {
                     frm.outlier_flags_.at(pose_opt_edge_wrap.idx_) = true;
                     pose_opt_edge_wrap.set_as_outlier();
                     ++num_bad_obs;
-                }
-                else {
+                } else {
                     frm.outlier_flags_.at(pose_opt_edge_wrap.idx_) = false;
                     pose_opt_edge_wrap.set_as_inlier();
                 }
-            }
-            else {
+            } else {
                 if (chi_sq_3D < edge->chi2()) {
                     frm.outlier_flags_.at(pose_opt_edge_wrap.idx_) = true;
                     pose_opt_edge_wrap.set_as_outlier();
                     ++num_bad_obs;
-                }
-                else {
+                } else {
                     frm.outlier_flags_.at(pose_opt_edge_wrap.idx_) = false;
                     pose_opt_edge_wrap.set_as_inlier();
                 }
@@ -141,6 +136,8 @@ unsigned int pose_optimizer::optimize(data::frame& frm) const {
     // 5. Update the information
 
     frm.set_cam_pose(frm_vtx->estimate());
+
+    std::cout << "num_bad_obs: " << num_bad_obs << " num_init_obs: " << num_init_obs << std::endl;
 
     return num_init_obs - num_bad_obs;
 }
