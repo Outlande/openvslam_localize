@@ -305,6 +305,7 @@ void tracking_module::track() {
     }
 
     // update last frame
+    visualize_keypoints();
     last_frm_ = curr_frm_;
 }
 
@@ -469,6 +470,7 @@ void tracking_module::visualize_keypoints()
         spdlog::warn("Not using perspective camera model!");
     }
 
+    cv::Mat project_show = img_gray_.clone();
     for (auto lm : pose_landmarks_) {
         // coodinate transformation
         Vec3_t cam_loc = K * (curr_frm_.cam_pose_cw_.block(0, 0, 3, 3) * lm->get_pos_in_world() +
@@ -488,6 +490,10 @@ void tracking_module::visualize_keypoints()
             // std::cout << "Tcw is " << curr_frm_.cam_pose_cw_ << std::endl;
             // std::cout << "landmark loc " << lm->get_pos_in_world() << std::endl;
             project_keypts.push_back(cv::KeyPoint(u, v, 1.0));
+            if (lm->ref_keyfrm_){
+                cv::putText(project_show,std::to_string(lm->ref_keyfrm_->id_),
+                cv::Point(int(u), int(v)), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(255, 255, 255), 1);
+            }
         }
     }
 
@@ -503,7 +509,6 @@ void tracking_module::visualize_keypoints()
     cv::putText(image_show, "unmatched : " + std::to_string(unmatched_keypts.size()),
                 cv::Point(10, image_show.rows - 10), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(0, 255, 255), 1);
 
-    cv::Mat project_show = img_gray_.clone();
     cv::drawKeypoints(project_show, project_keypts, project_show, cvScalar(0, 255, 0));
     cv::putText(project_show,
                 "server landmark : " + std::to_string(pose_landmarks_.size()) +
@@ -529,6 +534,7 @@ void tracking_module::visualize_keypoints()
 
     cv::namedWindow("keypoints", 1);
     cv::imshow("keypoints", combine_img);
+    cv::imwrite("draw/"+std::to_string(curr_frm_.id_)+".png", combine_img);
     cv::waitKey(2);
 }
 

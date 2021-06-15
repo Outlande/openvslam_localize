@@ -122,6 +122,8 @@ public:
     Vec3_t pos_w_after_global_BA_;
     unsigned int loop_BA_identifier_ = 0;
 
+    keyframe* ref_keyfrm_;
+
 private:
     //! world coordinates of this landmark
     Vec3_t pos_w_;
@@ -136,7 +138,6 @@ private:
     cv::Mat descriptor_;
 
     //! reference keyframe
-    keyframe* ref_keyfrm_;
 
     // track counter
     unsigned int num_observable_ = 1;
