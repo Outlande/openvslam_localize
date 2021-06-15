@@ -288,6 +288,7 @@ void tracking_module::track() {
         // check to insert the new keyframe derived from the current frame
         if (succeeded && new_keyframe_is_needed()) {
             insert_new_keyframe();
+            visualize_keypoints_track();
         }
 
         // tidy up observations
@@ -305,7 +306,6 @@ void tracking_module::track() {
     }
 
     // update last frame
-    visualize_keypoints();
     last_frm_ = curr_frm_;
 }
 
@@ -439,6 +439,103 @@ void tracking_module::localize() {
     // update last frame
     visualize_keypoints();
     last_frm_ = curr_frm_;
+}
+
+void tracking_module::visualize_keypoints_track()
+{
+    // plot keypoints
+    // not tracked kpts are red, local tracked are green, and server tracked are blue
+    std::vector<cv::KeyPoint> unmatched_keypts, outlier_keypts, local_keypts;
+    for (unsigned int idx = 0; idx < curr_frm_.num_keypts_; ++idx) {
+        auto lm = curr_frm_.landmarks_.at(idx);
+        if (!lm) {
+            if (curr_frm_.outlier_flags_.at(idx)) {
+                outlier_keypts.push_back(curr_frm_.keypts_.at(idx));
+            } else {
+                unmatched_keypts.push_back(curr_frm_.keypts_.at(idx));
+            }
+        } else {
+            local_keypts.push_back(curr_frm_.keypts_.at(idx));
+        }
+    }
+
+    // get server landmark from map db
+    std::vector<cv::KeyPoint> project_keypts;
+    Mat33_t K;
+    if (camera_->model_type_ == camera::model_type_t::Perspective) {
+        K = static_cast<camera::perspective*>(camera_)->eigen_cam_matrix_;
+        // spdlog::debug("K is {}, {}, {}, {}", K(0,0), K(1,1), K(0,2), K(1,2));
+        // std::cout << "K is " << K << std::endl;
+    } else {
+        spdlog::warn("Not using perspective camera model!");
+    }
+
+    cv::Mat project_show = img_gray_.clone();
+    for (auto lm : pose_landmarks_) {
+        // coodinate transformation
+        Vec3_t cam_loc = K * (curr_frm_.cam_pose_cw_.block(0, 0, 3, 3) * lm->get_pos_in_world() +
+                              curr_frm_.cam_pose_cw_.block(0, 3, 3, 1));
+        Vec3_t pos_c = curr_frm_.cam_pose_cw_.block(0, 0, 3, 3) * lm->get_pos_in_world() +
+                       curr_frm_.cam_pose_cw_.block(0, 3, 3, 1);
+        double z = pos_c[2];
+        if (z < 0) {
+            spdlog::debug("Invalid z {}", z);
+            continue;
+        }
+        float u = cam_loc[0] / cam_loc[2];
+        float v = cam_loc[1] / cam_loc[2];
+
+        if (u > 0 && u < camera_->cols_ && v > 0 && v < camera_->rows_) {
+            // spdlog::debug("cam loc is {}, {}, {}", cam_loc[0], cam_loc[1], cam_loc[2]);
+            // std::cout << "Tcw is " << curr_frm_.cam_pose_cw_ << std::endl;
+            // std::cout << "landmark loc " << lm->get_pos_in_world() << std::endl;
+            project_keypts.push_back(cv::KeyPoint(u, v, 1.0));
+            if (lm->ref_keyfrm_){
+                cv::putText(project_show,std::to_string(lm->ref_keyfrm_->id_),
+                cv::Point(int(u), int(v)), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(255, 255, 255), 1);
+            }
+        }
+    }
+
+    cv::Mat image_show = img_gray_.clone();
+    cv::drawKeypoints(image_show, unmatched_keypts, image_show, cvScalar(0, 255, 255));
+    cv::drawKeypoints(image_show, outlier_keypts, image_show, cvScalar(0, 0, 255));
+    cv::drawKeypoints(image_show, local_keypts, image_show, cvScalar(0, 255, 0));
+
+    cv::putText(image_show, "       local : " + std::to_string(local_keypts.size()),
+                cv::Point(10, image_show.rows - 70), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(0, 255, 0), 1);
+    cv::putText(image_show, "     outlier : " + std::to_string(outlier_keypts.size()),
+                cv::Point(10, image_show.rows - 30), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(0, 0, 255), 1);
+    cv::putText(image_show, "unmatched : " + std::to_string(unmatched_keypts.size()),
+                cv::Point(10, image_show.rows - 10), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(0, 255, 255), 1);
+
+    cv::drawKeypoints(project_show, project_keypts, project_show, cvScalar(0, 255, 0));
+    cv::putText(project_show,
+                "server landmark : " + std::to_string(pose_landmarks_.size()) +
+                    " (in current frame : " + std::to_string(project_keypts.size()) + ")",
+                cv::Point(10, project_show.rows - 10), CV_FONT_HERSHEY_COMPLEX, 0.4, cvScalar(0, 0, 255), 1);
+
+    // plot matching valid kpts
+    cv::Mat combine_img = combine_images(image_show, project_show);
+    for (unsigned int idx = 0; idx < curr_frm_.num_keypts_; ++idx) {
+        auto lm = curr_frm_.landmarks_.at(idx);
+        if (!lm) continue;
+
+        auto kpt = curr_frm_.keypts_.at(idx);
+
+        Vec3_t cam_loc = K * (curr_frm_.cam_pose_cw_.block(0, 0, 3, 3) * lm->get_pos_in_world() +
+                              curr_frm_.cam_pose_cw_.block(0, 3, 3, 1));
+        float u = cam_loc[0] / cam_loc[2];
+        float v = cam_loc[1] / cam_loc[2];
+
+        cv::line(combine_img, cv::Point(kpt.pt.x, kpt.pt.y), cv::Point(u + image_show.cols, v), cvScalar(245, 143, 41),
+                 1);
+    }
+
+    cv::namedWindow("keypoints", 1);
+    cv::imshow("keypoints", combine_img);
+    cv::imwrite("keyframe/"+std::to_string(curr_frm_.ref_keyfrm_->id_)+".png", combine_img);
+    cv::waitKey(2);
 }
 
 void tracking_module::visualize_keypoints()

@@ -134,6 +134,7 @@ public:
     double elapsed_ms_ = 0.0;
 
     void visualize_keypoints();
+    void visualize_keypoints_track();
 
     cv::Mat combine_images(cv::Mat img1, cv::Mat img2);
 
